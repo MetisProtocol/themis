@@ -1,0 +1,12 @@
+#!/bin/bash
+# This is a postinstallation script so the service can be configured and started when requested
+#
+sudo adduser --disabled-password --disabled-login --shell /usr/sbin/nologin --quiet --system --no-create-home --home /nonexistent themis
+if [ -d "/var/lib/themis" ]
+then
+    echo "Directory /var/lib/themis exists."
+else
+    mkdir -p /var/lib/themis
+    sudo chown -R themis /var/lib/themis
+fi
+sudo chown -R themis /var/lib/themis

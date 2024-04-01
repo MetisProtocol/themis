@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+###################
+# Remove themis installation
+###################
+sudo rm -rf /var/lib/themis/config
+sudo systemctl daemon-reload

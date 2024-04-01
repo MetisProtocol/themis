@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+  node:
+    container_name: node
+    image: metisseq/themis:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ETH_RPC_URL=https://sepolia.infura.io/v3/6d38067be9eb4d23b27cdd5439c91a07
+      - MPC_RPC_URL=tss-node:9001
+      - METIS_RPC_URL=http://l2geth:8545
+    volumes:
+      - ./node/themis:/var/lib/themis
+    ports:
+      - "26656:26656" # P2P (TCP)
+      - "26657:26657" # tendermint rpc (TCP)
+      - "1317:1317" # rest (TCP)
+    command:
+      - --rest-server=true
+      - start
+      - --p2p.laddr=tcp://0.0.0.0:26656
+      - --rpc.laddr=tcp://0.0.0.0:26657
+    networks:
+      localnet:
+        ipv4_address: 192.166.10.100
+
+  bridge:
+    container_name: bridge
+    image: metisseq/themis:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=info
+      - REST_SERVER=http://node:1317
+      - TENDERMINT_RPC_URL=http://node:26657
+      - METIS_RPC_URL=http://l2geth:8545
+      - MPC_RPC_URL=tss-node:9001
+      - LOCKING_START_HEIGHT=5108808  # L1 LockingContract deployed height
+      - IS_GAS_SENDER=true  # auto send gas when join network
+    volumes:
+      - ./node/themis:/var/lib/themis
+    ports:
+      - "9545:8646" # RPC (TCP)
+    depends_on:
+      - node
+    command:
+      - bridge
+      - start
+      - --all
+      - --node=tcp://node:26657
+      - --log_level=info
+    networks:
+      localnet:
+        ipv4_address: 192.166.10.110
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        -
+          subnet: 192.166.10.0/16

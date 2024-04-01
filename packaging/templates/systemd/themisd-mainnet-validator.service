@@ -1,0 +1,18 @@
+[Unit]
+  Description=themisd
+  After=metis.service
+  StartLimitIntervalSec=500
+  StartLimitBurst=5
+[Service]
+  Restart=on-failure
+  RestartSec=5s
+  WorkingDirectory=/usr/bin
+  ExecStart=/usr/bin/themisd start --home "/var/lib/themis" \
+		--bridge --all \
+    --chain=mainnet \
+    --rest-server
+  Type=simple
+  LimitNOFILE=65536
+  User=themis
+[Install]
+  WantedBy=multi-user.target
