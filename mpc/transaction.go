@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+
 	hmTypes "github.com/metis-seq/themis/types"
 )
 
@@ -37,7 +38,7 @@ func GetCheckTxSignMsgData(ctx sdk.Context, k Keeper, msgType hmTypes.SignType, 
 	}
 
 	k.Logger(ctx).Info("GetCheckTxSignMsgData chain_id", "chain_id", chainID)
-	txSigner := types.NewLondonSigner(big.NewInt(int64(chainID)))
+	txSigner := types.NewCancunSigner(big.NewInt(int64(chainID)))
 	return txSigner, txSigner.Hash(tx).Bytes(), tx.Data(), nil
 }
 

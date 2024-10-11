@@ -53,6 +53,8 @@ func convertToSlots(vals []hmTypes.Validator) (validatorIndices []uint64) {
 
 // SelectNextProducers selects producers for next span by converting power to tickets
 func SelectNextProducers(blkHash common.Hash, spanEligibleValidators []hmTypes.Validator, producerCount uint64) ([]uint64, error) {
+	randGen := NewCLTGenerator()
+
 	selectedProducers := make([]uint64, 0)
 
 	if len(spanEligibleValidators) <= int(producerCount) {
@@ -66,7 +68,6 @@ func SelectNextProducers(blkHash common.Hash, spanEligibleValidators []hmTypes.V
 	// extract seed from hash
 	seedBytes := helper.ToBytes32(blkHash.Bytes()[:32])
 	seed := int64(binary.BigEndian.Uint64(seedBytes[:]))
-	rand.Seed(seed)
 
 	// weighted range from validators' voting power
 	votingPower := make([]uint64, len(spanEligibleValidators))
@@ -83,8 +84,13 @@ func SelectNextProducers(blkHash common.Hash, spanEligibleValidators []hmTypes.V
 			Weighted range will look like (1, 2)
 			Rolling inclusive will have a range of 0 - 2, making validator with staking power 1 chance of selection = 66%
 		*/
-		targetWeight := randomRangeInclusive(1, totalVotingPower)
-		index := binarySearch(weightedRanges, targetWeight)
+		// targetWeight := randomRangeInclusive(1, totalVotingPower)
+		targetWeight, err := randGen.GenerateRandomInt(seed, 1, totalVotingPower)
+		if err != nil {
+			return nil, err
+		}
+
+		index := binarySearch(weightedRanges, uint64(targetWeight))
 		selectedProducers = append(selectedProducers, spanEligibleValidators[index].ID.Uint64())
 	}
 
