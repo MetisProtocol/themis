@@ -25,10 +25,12 @@ func NewCLTGenerator() *CLTGenerator {
 // GenerateRandomInt generates a random integer from min to max (inclusive), based on a provided seed.
 // This simulates a normal distribution by summing multiple uniform random variables.
 func (g *CLTGenerator) GenerateRandomInt(seed int64, min, max uint64) (int64, error) {
+	// Check for invalid range
 	if min > max {
 		return 0, ErrInvalidRange
 	}
 
+	// Check for overflow
 	rangeDiff := max - min
 	if max > uint64(maxInt63) || min > uint64(maxInt63) || rangeDiff > uint64(maxInt63) {
 		return 0, ErrOverflow
@@ -55,7 +57,7 @@ func (g *CLTGenerator) GenerateRandomInt(seed int64, min, max uint64) (int64, er
 		sum += randValue
 	}
 
-	// Average the sum to bring it back within the desired range, apply adjustment factor
+	// Average the sum to bring it back within the desired range
 	result := (sum / numSamples) + minInt
 	if result < minInt {
 		return minInt, nil
