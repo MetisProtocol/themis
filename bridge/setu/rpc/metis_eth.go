@@ -14,11 +14,12 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/hashicorp/golang-lru/v2/expirable"
-	"github.com/metis-seq/themis/bridge/setu/util"
-	"github.com/metis-seq/themis/bridge/setu/util/sqlite"
 	"github.com/spf13/viper"
 	tenderCommon "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/metis-seq/themis/bridge/setu/util"
+	"github.com/metis-seq/themis/bridge/setu/util/sqlite"
 )
 
 const (
@@ -28,6 +29,8 @@ const (
 type MetisEthService struct {
 	// Base service
 	tenderCommon.BaseService
+
+	listenAddr string
 
 	rpcServer       *rpc.Server
 	ethereumService *EthereumService
@@ -42,10 +45,12 @@ type EthereumService struct {
 	cache *expirable.LRU[string, struct{}]
 }
 
-func NewMetisEthService(cdc *codec.Codec) *MetisEthService {
+func NewMetisEthService(listenAddr string, cdc *codec.Codec) *MetisEthService {
 	var logger = util.Logger().With("module", metisEthServiceStr)
 	// creating metis eth object
-	metisEthService := &MetisEthService{}
+	metisEthService := &MetisEthService{
+		listenAddr: listenAddr,
+	}
 	metisEthService.BaseService = *tenderCommon.NewBaseService(logger, metisEthServiceStr, metisEthService)
 	metisEthService.ethereumService = &EthereumService{
 		logger:    logger,
@@ -132,7 +137,7 @@ func (s *MetisEthService) OnStart() error {
 	http.Handle("/", s.rpcServer)
 	http.HandleFunc("/health", health)
 	s.Logger.Info("starting Ethereum RPC server on :8646")
-	err := http.ListenAndServe(":8646", nil)
+	err := http.ListenAndServe(s.listenAddr, nil)
 	if err != nil {
 		s.Logger.Error("OnStart | Starting Ethereum RPC", "Error", err)
 		return err

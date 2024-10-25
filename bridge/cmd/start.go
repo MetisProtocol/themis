@@ -11,6 +11,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cliContext "github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/libs/common"
+	httpClient "github.com/tendermint/tendermint/rpc/client"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/metis-seq/themis/app"
 	"github.com/metis-seq/themis/bridge/setu/broadcaster"
 	"github.com/metis-seq/themis/bridge/setu/listener"
@@ -18,13 +23,10 @@ import (
 	"github.com/metis-seq/themis/bridge/setu/rpc"
 	"github.com/metis-seq/themis/bridge/setu/util"
 	"github.com/metis-seq/themis/bridge/setu/util/sqlite"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/common"
-	httpClient "github.com/tendermint/tendermint/rpc/client"
-	"golang.org/x/sync/errgroup"
+
+	"github.com/spf13/viper"
 
 	"github.com/metis-seq/themis/helper"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -33,7 +35,7 @@ const (
 
 // StartBridgeWithCtx starts bridge service and is able to shutdow gracefully
 // returns service errors, if any
-func StartBridgeWithCtx(shutdownCtx context.Context) error {
+func StartBridgeWithCtx(cmd *cobra.Command, shutdownCtx context.Context) error {
 	logger.Info("start bridge helper.Config", helper.GetConfig())
 
 	// create codec
@@ -42,12 +44,14 @@ func StartBridgeWithCtx(shutdownCtx context.Context) error {
 	_txBroadcaster := broadcaster.NewTxBroadcaster(cdc)
 	_httpClient := httpClient.NewHTTP(helper.GetConfig().TendermintRPCUrl, "/websocket")
 
+	rpcListenAddr := cmd.Flag(rpcServerFlag).Value.String()
+
 	// selected services to start
 	services := []common.Service{}
 	services = append(services,
 		listener.NewListenerService(cdc, _httpClient),
 		processor.NewProcessorService(cdc, _httpClient, _txBroadcaster),
-		rpc.NewMetisEthService(cdc),
+		rpc.NewMetisEthService(rpcListenAddr, cdc),
 	)
 
 	// Start http client
@@ -133,7 +137,7 @@ func StartBridgeWithCtx(shutdownCtx context.Context) error {
 }
 
 // StartBridge starts bridge service, isStandAlone prevents os.Exit if the bridge started as side service
-func StartBridge(isStandAlone bool) {
+func StartBridge(rpcListenAddr string, isStandAlone bool) {
 	// create codec
 	cdc := app.MakeCodec()
 
@@ -145,7 +149,7 @@ func StartBridge(isStandAlone bool) {
 	services = append(services,
 		listener.NewListenerService(cdc, _httpClient),
 		processor.NewProcessorService(cdc, _httpClient, _txBroadcaster),
-		rpc.NewMetisEthService(cdc),
+		rpc.NewMetisEthService(rpcListenAddr, cdc),
 	)
 
 	// sync group
@@ -230,7 +234,8 @@ func GetStartCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Start bridge server",
 		Run: func(cmd *cobra.Command, args []string) {
-			StartBridge(true)
+			rpcListenAddr := cmd.Flag(rpcServerFlag).Value.String()
+			StartBridge(rpcListenAddr, true)
 		}}
 
 	// log level

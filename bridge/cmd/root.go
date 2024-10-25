@@ -21,6 +21,8 @@ import (
 const (
 	bridgeDBFlag       = "bridge-db"
 	bridgeSqliteDBFlag = "bridge-sqlite-db"
+	metricsServerFlag  = "metrics-server-addr"
+	rpcServerFlag      = "rpc-server-addr"
 	metisChainIDFlag   = "metis-chain-id"
 	logsTypeFlag       = "logs-type"
 )
@@ -42,7 +44,7 @@ var rootCmd = &cobra.Command{
 			initTendermintViperConfig(cmd)
 
 			// init metrics server
-			initMetrics()
+			initMetrics(cmd)
 		}
 	},
 	PostRunE: func(cmd *cobra.Command, args []string) error {
@@ -98,17 +100,32 @@ func DecorateWithBridgeRootFlags(cmd *cobra.Command, v *viper.Viper, loggerInsta
 		"Use json logger",
 	)
 
+	// bridge metrics server listen addr
+	cmd.PersistentFlags().String(
+		metricsServerFlag,
+		helper.DefaultMetricsListenAddr,
+		"Metrics server listen addr, default to :2112",
+	)
+
+	// bridge rpc server listen addr
+	cmd.PersistentFlags().String(
+		rpcServerFlag,
+		helper.DefaultRPCListenAddr,
+		"RPC server listen addr, default to :8646",
+	)
+
 	if err := v.BindPFlag(metisChainIDFlag, cmd.PersistentFlags().Lookup(metisChainIDFlag)); err != nil {
 		loggerInstance.Error(fmt.Sprintf("%v | BindPFlag | %v", caller, metisChainIDFlag), "Error", err)
 	}
 }
 
 // initMetrics initializes metrics server with the default handler
-func initMetrics() {
+func initMetrics(cmd *cobra.Command) {
 	cfg := rpcserver.DefaultConfig()
+	metricsServerListenAddr := cmd.Flag(metricsServerFlag).Value.String()
 
 	metricsServer = http.Server{
-		Addr:              ":2112",
+		Addr:              metricsServerListenAddr,
 		ReadTimeout:       cfg.ReadTimeout,
 		ReadHeaderTimeout: cfg.ReadTimeout,
 		WriteTimeout:      cfg.WriteTimeout,

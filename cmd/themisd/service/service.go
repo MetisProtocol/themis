@@ -496,7 +496,7 @@ func startInProcess(cmd *cobra.Command, shutdownCtx context.Context, ctx *server
 	if startBridge {
 		bridgeCmd.AdjustBridgeDBValue(cmd, viper.GetViper())
 		g.Go(func() error {
-			return bridgeCmd.StartBridgeWithCtx(gCtx)
+			return bridgeCmd.StartBridgeWithCtx(cmd, gCtx)
 		})
 	}
 
