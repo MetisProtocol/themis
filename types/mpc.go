@@ -19,6 +19,7 @@ const (
 	CommonMpcType       MpcType = iota
 	StateSubmitMpcType          // Special type for state submit
 	RewardSubmitMpcType         // Special type for reward submit
+	BlobSubmitMpcType           // Special type for blob tx submit
 )
 
 type SignType int

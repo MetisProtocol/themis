@@ -18,6 +18,7 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
+
 	"github.com/metis-seq/themis/bridge/setu/util"
 	"github.com/metis-seq/themis/helper"
 	metisTypes "github.com/metis-seq/themis/metis/types"
@@ -911,7 +912,7 @@ func (sp *SpanProcessor) getLastMpc() (*types.Mpc, error) {
 	// fetch latest start block from themis via rest query
 	result, err := helper.FetchFromAPI(sp.cliCtx, helper.GetThemisServerEndpoint(fmt.Sprintf(util.LatestMpcURL, types.CommonMpcType)))
 	if err != nil {
-		sp.Logger.Error("Error while fetching latest mpc")
+		sp.Logger.Error("Error while fetching latest mpc", "err", err)
 		return nil, err
 	}
 
@@ -927,7 +928,7 @@ func (sp *SpanProcessor) getMpcSign(signId string) (*types.MpcSign, error) {
 	// fetch latest start block from themis via rest query
 	result, err := helper.FetchFromAPI(sp.cliCtx, helper.GetThemisServerEndpoint(fmt.Sprintf(util.MpcSignByIdURL, signId)))
 	if err != nil {
-		sp.Logger.Error("Error while fetching latest mpc")
+		sp.Logger.Error("Error while fetching latest mpc", "err", err)
 		return nil, err
 	}
 

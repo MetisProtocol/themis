@@ -76,7 +76,7 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 
 	// check mpc type
 	switch msg.MpcType {
-	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType:
+	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType, hmTypes.BlobSubmitMpcType:
 	default:
 		k.Logger(ctx).Info("invalid mpc type, ignore it")
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeMpcInvalidType)
