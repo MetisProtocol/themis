@@ -22,9 +22,9 @@ type UnsignedLegacyTx struct {
 	To       *common.Address `rlp:"nil"` // nil means contract creation
 	Value    *big.Int        // wei amount
 	Data     []byte          // contract invocation input data
-	V        *big.Int        `rlp:"nil"`
-	R        *big.Int        `rlp:"nil"`
-	S        *big.Int        `rlp:"nil"`
+	V        *big.Int        `rlp:"optional"`
+	R        *big.Int        `rlp:"optional"`
+	S        *big.Int        `rlp:"optional"`
 }
 
 func (t *UnsignedLegacyTx) TxData() types.TxData {
@@ -48,9 +48,9 @@ type UnsignedAccessListTx struct {
 	Value      *big.Int         // wei amount
 	Data       []byte           // contract invocation input data
 	AccessList types.AccessList // EIP-2930 access list
-	V          *big.Int         `rlp:"nil"`
-	R          *big.Int         `rlp:"nil"`
-	S          *big.Int         `rlp:"nil"`
+	V          *big.Int         `rlp:"optional"`
+	R          *big.Int         `rlp:"optional"`
+	S          *big.Int         `rlp:"optional"`
 }
 
 func (t *UnsignedAccessListTx) TxData() types.TxData {
@@ -77,9 +77,9 @@ type UnsignedDynamicFeeTx struct {
 	Value      *big.Int
 	Data       []byte
 	AccessList types.AccessList
-	V          *big.Int `rlp:"nil"`
-	R          *big.Int `rlp:"nil"`
-	S          *big.Int `rlp:"nil"`
+	V          *big.Int `rlp:"optional"`
+	R          *big.Int `rlp:"optional"`
+	S          *big.Int `rlp:"optional"`
 }
 
 func (t *UnsignedDynamicFeeTx) TxData() types.TxData {
@@ -109,9 +109,9 @@ type UnsignedBlobTx struct {
 	AccessList types.AccessList
 	BlobFeeCap *uint256.Int // a.k.a. maxFeePerBlobGas
 	BlobHashes []common.Hash
-	V          *big.Int `rlp:"nil"`
-	R          *big.Int `rlp:"nil"`
-	S          *big.Int `rlp:"nil"`
+	V          *big.Int `rlp:"optional"`
+	R          *big.Int `rlp:"optional"`
+	S          *big.Int `rlp:"optional"`
 }
 
 func (t *UnsignedBlobTx) TxData() types.TxData {
