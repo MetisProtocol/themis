@@ -89,14 +89,14 @@ var (
 
 // Tendermint full-node start flags
 const (
-	flagAddress              = "address"
-	flagTraceStore           = "trace-store"
-	flagPruning              = "pruning"
-	flagCPUProfile           = "cpu-profile"
-	FlagMinGasPrices         = "minimum-gas-prices"
-	FlagHaltHeight           = "halt-height"
-	FlagHaltTime             = "halt-time"
-	FlagElectionAlgoV1Height = "election-algo-v1-height"
+	flagAddress               = "address"
+	flagTraceStore            = "trace-store"
+	flagPruning               = "pruning"
+	flagCPUProfile            = "cpu-profile"
+	FlagMinGasPrices          = "minimum-gas-prices"
+	FlagHaltHeight            = "halt-height"
+	FlagHaltTime              = "halt-time"
+	FlagSelectionAlgoV1Height = "selection-algo-v1-height"
 )
 
 // Open Collector Flags
@@ -323,7 +323,7 @@ which accepts a path for the resulting pprof file.
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
-	cmd.Flags().Uint64(FlagElectionAlgoV1Height, 0, "Height at which to switch to election algorithm v1")
+	cmd.Flags().Uint64(FlagSelectionAlgoV1Height, 0, "Height at which to switch to election algorithm v1")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
