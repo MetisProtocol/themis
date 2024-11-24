@@ -87,7 +87,7 @@ func SelectNextProducers(ctx sdk.Context, blkHash common.Hash, spanEligibleValid
 		*/
 
 		var targetWeight uint64
-		if ctx.BlockHeight() < helper.GetNewSelectionAlgoHeight() {
+		if helper.GetNewSelectionAlgoHeight() == 0 || ctx.BlockHeight() < helper.GetNewSelectionAlgoHeight() {
 			targetWeight = randomRangeInclusive(1, totalVotingPower)
 			ctx.Logger().Debug("Selecting new proposer", "algoVersion", 0, "totalVotingPower",
 				totalVotingPower, "targetWeight", targetWeight,
