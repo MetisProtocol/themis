@@ -69,6 +69,7 @@ func SelectNextProducers(ctx sdk.Context, blkHash common.Hash, spanEligibleValid
 	// extract seed from hash
 	seedBytes := helper.ToBytes32(blkHash.Bytes()[:32])
 	seed := int64(binary.BigEndian.Uint64(seedBytes[:]))
+	rand.Seed(seed)
 
 	// weighted range from validators' voting power
 	votingPower := make([]uint64, len(spanEligibleValidators))
