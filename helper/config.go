@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -105,7 +106,7 @@ const (
 	DefaultSHStakeUpdateInterval    = 3 * time.Hour
 	DefaultSHMaxDepthDuration       = time.Hour
 
-	DefaultMainchainGasLimit = uint64(5000000)
+	DefaultMainchainGasLimit  = uint64(5000000)
 	DefaultMetischainGasLimit = uint64(5000000)
 
 	MainchainBuildGasLimit  = uint64(30_000_000)
@@ -165,6 +166,8 @@ type Configuration struct {
 
 	ThemisServerURL string `mapstructure:"themis_rest_server"` // themis server url
 	MpcServerURL    string `mapstructure:"mpc_rpc_server"`     // mpc server url
+
+	SelectionAlgoV1Height int64 `mapstructure:"selection_algo_v1_height"` // height to switch to new selection algo
 
 	MainchainGasLimit    uint64 `mapstructure:"main_chain_gas_limit"`     // gas limit to mainchain transaction.
 	MainchainMaxGasPrice int64  `mapstructure:"main_chain_max_gas_price"` // max gas price to mainchain transaction.
@@ -356,7 +359,7 @@ func InitThemisConfigWith(homeDir string, themisConfigFileFromFLag string) {
 	case MainChain:
 	case TestChain:
 	default:
-		newSelectionAlgoHeight = 0
+		newSelectionAlgoHeight = conf.SelectionAlgoV1Height
 		spanOverrideHeight = 0
 	}
 
@@ -424,6 +427,16 @@ func (c *Configuration) MergeFromEnv() {
 	envMpcRpcUrl := os.Getenv("MPC_RPC_URL")
 	if envMpcRpcUrl != "" {
 		c.MpcServerURL = envMpcRpcUrl
+	}
+
+	envSelectionAlgoV1Height := os.Getenv("SELECTION_ALGO_V1_HEIGHT")
+	if envSelectionAlgoV1Height != "" {
+		var err error
+		height, err := strconv.Atoi(envSelectionAlgoV1Height)
+		if err != nil {
+			panic("invalid SELECTION_ALGO_V1_HEIGHT" + err.Error())
+		}
+		c.SelectionAlgoV1Height = int64(height)
 	}
 
 	envSpanPollInterval := os.Getenv("SPAN_POLL_INTERNAL")
