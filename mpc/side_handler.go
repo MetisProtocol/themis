@@ -58,7 +58,7 @@ func NewPostTxHandler(k Keeper) hmTypes.PostTxHandler {
 
 // SideHandleMsgMpcCreate validates external calls required for processing proposed mpc
 func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCreate) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for mpc create msg",
+	k.Logger(ctx).Info("✅ Validating External call for mpc create msg",
 		"mpcId", msg.ID,
 	)
 
@@ -127,7 +127,7 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for mpc create msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for mpc create msg")
 
 	result.Result = abci.SideTxResultType_Yes
 	return
@@ -135,7 +135,7 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 
 // SideHandleMsgProposeMpcSign validates external calls required for processing proposed mpc
 func SideHandleMsgProposeMpcSign(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcSign) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for mpc sign msg",
+	k.Logger(ctx).Info("✅ Validating External call for mpc sign msg",
 		"id", msg.ID,
 	)
 
@@ -209,7 +209,7 @@ func SideHandleMsgProposeMpcSign(ctx sdk.Context, k Keeper, msg types.MsgPropose
 	default:
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for mpc sign msg", "id", msg.ID)
+	k.Logger(ctx).Info("✅ Successfully validated External call for mpc sign msg", "id", msg.ID)
 
 	result.Result = abci.SideTxResultType_Yes
 	return
@@ -217,7 +217,7 @@ func SideHandleMsgProposeMpcSign(ctx sdk.Context, k Keeper, msg types.MsgPropose
 
 // SideHandleMsgMpcSign validates external calls required for processing mpc sign
 func SideHandleMsgMpcSign(ctx sdk.Context, k Keeper, msg types.MsgMpcSign) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for mpc sign msg",
+	k.Logger(ctx).Info("✅ Validating External call for mpc sign msg",
 		"id", msg.ID,
 	)
 
@@ -283,7 +283,7 @@ func SideHandleMsgMpcSign(ctx sdk.Context, k Keeper, msg types.MsgMpcSign) (resu
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for mpc sign msg", "id", msg.ID)
+	k.Logger(ctx).Info("✅ Successfully validated External call for mpc sign msg", "id", msg.ID)
 
 	result.Result = abci.SideTxResultType_Yes
 	return

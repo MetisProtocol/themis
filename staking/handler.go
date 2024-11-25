@@ -38,7 +38,7 @@ func NewHandler(k Keeper, contractCaller helper.IContractCaller) sdk.Handler {
 
 // HandleMsgValidatorJoin msg validator join
 func HandleMsgValidatorJoin(ctx sdk.Context, msg types.MsgValidatorJoin, k Keeper, contractCaller helper.IContractCaller) sdk.Result {
-	k.Logger(ctx).Info("Validating validator join msg",
+	k.Logger(ctx).Info("✅ Validating validator join msg",
 		"validatorId", msg.ID,
 		"activationBatch", msg.ActivationBatch,
 		"amount", msg.Amount,
@@ -100,7 +100,7 @@ func HandleMsgValidatorJoin(ctx sdk.Context, msg types.MsgValidatorJoin, k Keepe
 
 // HandleMsgStakeUpdate handles stake update message
 func HandleMsgStakeUpdate(ctx sdk.Context, msg types.MsgStakeUpdate, k Keeper, contractCaller helper.IContractCaller) sdk.Result {
-	k.Logger(ctx).Info("Validating stake update msg",
+	k.Logger(ctx).Info("✅ Validating stake update msg",
 		"validatorID", msg.ID,
 		"newAmount", msg.NewAmount,
 		"txHash", msg.TxHash,
@@ -160,7 +160,7 @@ func HandleMsgStakeUpdate(ctx sdk.Context, msg types.MsgStakeUpdate, k Keeper, c
 
 // HandleMsgSignerUpdate handles signer update message
 func HandleMsgSignerUpdate(ctx sdk.Context, msg types.MsgSignerUpdate, k Keeper, contractCaller helper.IContractCaller) sdk.Result {
-	k.Logger(ctx).Info("Validating signer update msg",
+	k.Logger(ctx).Info("✅ Validating signer update msg",
 		"validatorID", msg.ID,
 		"NewSignerPubkey", msg.NewSignerPubKey.String(),
 		"txHash", msg.TxHash,
@@ -218,7 +218,7 @@ func HandleMsgSignerUpdate(ctx sdk.Context, msg types.MsgSignerUpdate, k Keeper,
 
 // HandleMsgValidatorExit handle msg validator exit
 func HandleMsgValidatorExit(ctx sdk.Context, msg types.MsgValidatorExit, k Keeper, contractCaller helper.IContractCaller) sdk.Result {
-	k.Logger(ctx).Info("Validating validator exit msg",
+	k.Logger(ctx).Info("✅ Validating validator exit msg",
 		"validatorID", msg.ID,
 		"deactivatonBatch", msg.DeactivationBatch,
 		"txHash", msg.TxHash,
@@ -272,7 +272,7 @@ func HandleMsgValidatorExit(ctx sdk.Context, msg types.MsgValidatorExit, k Keepe
 
 // HandleMsgBatchSubmitReward handle msg batch submit reward
 func HandleMsgBatchSubmitReward(ctx sdk.Context, msg types.MsgBatchSubmitReward, k Keeper, contractCaller helper.IContractCaller) sdk.Result {
-	k.Logger(ctx).Info("Validating batch submit reward msg",
+	k.Logger(ctx).Info("✅ Validating batch submit reward msg",
 		"validatorID", msg.ID,
 		"txHash", msg.TxHash,
 		"logIndex", msg.LogIndex,

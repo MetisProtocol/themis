@@ -11,68 +11,74 @@ import (
 )
 
 // handleLog handles the given log
-func (rl *RootChainListener) handleLog(vLog types.Log, selectedEvent *abi.Event) {
-	rl.Logger.Debug("ReceivedEvent", "eventname", selectedEvent.Name)
+func (rl *RootChainListener) handleLog(vLog types.Log, selectedEvent *abi.Event) error {
+	rl.Logger.Info("ReceivedEvent", "eventname", selectedEvent.Name)
 
 	switch selectedEvent.Name {
 	case "Locked":
-		rl.handleStakedLog(vLog, selectedEvent)
+		return rl.handleStakedLog(vLog, selectedEvent)
 	case "LockUpdate":
-		rl.handleStakeUpdateLog(vLog, selectedEvent)
+		return rl.handleStakeUpdateLog(vLog, selectedEvent)
 	case "SignerChange":
-		rl.handleSignerChangeLog(vLog, selectedEvent)
+		return rl.handleSignerChangeLog(vLog, selectedEvent)
 	case "UnlockInit":
-		rl.handleUnstakeInitLog(vLog, selectedEvent)
+		return rl.handleUnstakeInitLog(vLog, selectedEvent)
 	case "BatchSubmitReward":
-		rl.handleBatchSubmitReward(vLog, selectedEvent)
+		return rl.handleBatchSubmitReward(vLog, selectedEvent)
+	default:
+		rl.Logger.Info("Unhandled event", "eventname", selectedEvent.Name)
 	}
+	return nil
 }
 
-func (rl *RootChainListener) handleStakedLog(vLog types.Log, selectedEvent *abi.Event) {
+func (rl *RootChainListener) handleStakedLog(vLog types.Log, selectedEvent *abi.Event) error {
 	logBytes, err := jsoniter.ConfigFastest.Marshal(vLog)
 	if err != nil {
 		rl.Logger.Error("Failed to marshal log", "Error", err)
+		return err
 	}
-
 	event := new(stakinginfo.StakinginfoLocked)
 	if err = helper.UnpackLog(rl.stakingInfoAbi, event, selectedEvent.Name, &vLog); err != nil {
 		rl.Logger.Error("Error while parsing event", "name", selectedEvent.Name, "error", err)
+		return err
 	}
-
-	rl.insertToDb(selectedEvent.Name, string(logBytes))
+	return rl.insertToDb(selectedEvent.Name, string(logBytes))
 }
 
-func (rl *RootChainListener) handleStakeUpdateLog(vLog types.Log, selectedEvent *abi.Event) {
+func (rl *RootChainListener) handleStakeUpdateLog(vLog types.Log, selectedEvent *abi.Event) error {
 	logBytes, err := jsoniter.ConfigFastest.Marshal(vLog)
 	if err != nil {
 		rl.Logger.Error("Failed to marshal log", "Error", err)
+		return err
 	}
-	rl.insertToDb(selectedEvent.Name, string(logBytes))
+	return rl.insertToDb(selectedEvent.Name, string(logBytes))
 }
 
-func (rl *RootChainListener) handleSignerChangeLog(vLog types.Log, selectedEvent *abi.Event) {
+func (rl *RootChainListener) handleSignerChangeLog(vLog types.Log, selectedEvent *abi.Event) error {
 	logBytes, err := jsoniter.ConfigFastest.Marshal(vLog)
 	if err != nil {
 		rl.Logger.Error("Failed to marshal log", "Error", err)
+		return err
 	}
-	rl.insertToDb(selectedEvent.Name, string(logBytes))
+	return rl.insertToDb(selectedEvent.Name, string(logBytes))
 }
 
-func (rl *RootChainListener) handleUnstakeInitLog(vLog types.Log, selectedEvent *abi.Event) {
+func (rl *RootChainListener) handleUnstakeInitLog(vLog types.Log, selectedEvent *abi.Event) error {
 	logBytes, err := jsoniter.ConfigFastest.Marshal(vLog)
 	if err != nil {
 		rl.Logger.Error("Failed to marshal log", "Error", err)
+		return err
 	}
-	rl.insertToDb(selectedEvent.Name, string(logBytes))
+	return rl.insertToDb(selectedEvent.Name, string(logBytes))
 }
 
-func (rl *RootChainListener) handleBatchSubmitReward(vLog types.Log, selectedEvent *abi.Event) {
+func (rl *RootChainListener) handleBatchSubmitReward(vLog types.Log, selectedEvent *abi.Event) error {
 	logBytes, err := jsoniter.ConfigFastest.Marshal(vLog)
 	if err != nil {
 		rl.Logger.Error("Failed to marshal log", "Error", err)
+		return err
 	}
-
-	rl.insertToDb(selectedEvent.Name, string(logBytes))
+	return rl.insertToDb(selectedEvent.Name, string(logBytes))
 }
 
 func (rl *RootChainListener) insertToDb(eventName, eventLog string) error {

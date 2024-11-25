@@ -34,6 +34,8 @@ const (
 	lastRootBlockKey = "listener-rootchain-last-block" // storage key
 )
 
+var maxBlockRange = big.NewInt(500) // max event polling range
+
 // NewRootChainListener - constructor func
 func NewRootChainListener() *RootChainListener {
 	contractCaller, err := helper.NewContractCaller()
@@ -86,86 +88,112 @@ func (rl *RootChainListener) Start() error {
 
 // ProcessHeader - process headerblock from rootchain
 func (rl *RootChainListener) ProcessHeader(newHeader *blockHeader) {
-	rl.Logger.Debug("New block detected", "blockNumber", newHeader.header.Number)
+}
 
+func (rl *RootChainListener) StartPolling(ctx context.Context, pollInterval time.Duration, _ *big.Int) {
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
 	// fetch context
-	rootchainContext, err := rl.getRootChainContext()
+	rootchainCtx, err := rl.getRootChainContext()
 	if err != nil {
+		rl.Logger.Error("Failed to get root chain context", "error", err)
 		return
 	}
-
-	requiredConfirmations := rootchainContext.ChainmanagerParams.MainchainTxConfirmations
-	headerNumber := newHeader.header.Number
-	from := headerNumber
-
-	// If incoming header is a `finalized` header, it can directly be considered as
-	// the upper cap (i.e. the `to` value)
-	//
-	// If incoming header is a `latest` header, rely on `requiredConfirmations` to get
-	// finalized block range.
-	if !newHeader.isFinalized {
-		// This check is only useful when the L1 blocks received are < requiredConfirmations
-		// just for the below headerNumber -= requiredConfirmations math operation
-		confirmationBlocks := big.NewInt(0).SetUint64(requiredConfirmations)
-		if headerNumber.Cmp(confirmationBlocks) <= 0 {
-			rl.Logger.Error("Block number less than Confirmations required", "blockNumber", headerNumber.Uint64, "confirmationsRequired", confirmationBlocks.Uint64)
+	confirmationCount := rootchainCtx.ChainmanagerParams.MainchainTxConfirmations
+	for {
+		select {
+		case <-ctx.Done():
+			rl.Logger.Info("RootChainListener polling stopped")
 			return
-		}
-
-		// subtract the `confirmationBlocks` to only consider blocks before that
-		headerNumber = headerNumber.Sub(headerNumber, confirmationBlocks)
-
-		// update the `from` value
-		from = headerNumber
-	}
-
-	// get last block from storage
-	hasLastBlock, _ := rl.storageClient.Has([]byte(lastRootBlockKey), nil)
-	if hasLastBlock {
-		lastBlockBytes, err := rl.storageClient.Get([]byte(lastRootBlockKey), nil)
-		if err != nil {
-			rl.Logger.Info("Error while fetching last block bytes from storage", "error", err)
-			return
-		}
-
-		rl.Logger.Debug("Got rootchain last block from bridge storage", "lastBlock", string(lastBlockBytes))
-
-		if result, err := strconv.ParseUint(string(lastBlockBytes), 10, 64); err == nil {
-			if result >= headerNumber.Uint64() {
-				return
+		case <-ticker.C:
+			currentHeight, err := rl.chainClient.BlockNumber(ctx)
+			if err != nil {
+				rl.Logger.Error("Failed to get current block height", "error", err)
+				continue
 			}
 
-			from = big.NewInt(0).SetUint64(result + 1)
+			maxProcessHeight := currentHeight - confirmationCount
+
+			lastProcessedHeight, err := rl.getLastProcessedHeight()
+			if err != nil {
+				rl.Logger.Error("Failed to get last processed height", "error", err)
+				continue
+			}
+
+			lockingStartHeight := rl.getLockingStartHeight()
+			if lastProcessedHeight.Cmp(lockingStartHeight) < 0 {
+				lastProcessedHeight = lockingStartHeight
+			}
+
+			if lastProcessedHeight.Cmp(big.NewInt(int64(maxProcessHeight))) >= 0 {
+				continue
+			}
+
+			startHeight := new(big.Int).Add(lastProcessedHeight, big.NewInt(1))
+			endHeight := new(big.Int).Add(startHeight, maxBlockRange)
+			endHeight.Sub(endHeight, big.NewInt(1))
+
+			if endHeight.Cmp(big.NewInt(int64(maxProcessHeight))) > 0 {
+				endHeight = big.NewInt(int64(maxProcessHeight))
+			}
+
+			err = rl.queryAndBroadcastEvents(rootchainCtx, startHeight, endHeight)
+			if err != nil {
+				rl.Logger.Error("Failed to process blocks", err)
+			} else {
+				err = rl.storageClient.Put([]byte(lastRootBlockKey), []byte(endHeight.String()), nil)
+				if err != nil {
+					rl.Logger.Error("Error while saving lastRootBlockKey", "error", err)
+				} else {
+					rl.Logger.Info("Root chain listener processed successfully", "from", startHeight, "to", endHeight)
+				}
+			}
 		}
-	}
-
-	// check env start height
-	lockingStartHeightStr := os.Getenv("LOCKING_START_HEIGHT")
-	if lockingStartHeightStr != "" && !hasLastBlock {
-		lockingStartHeight, _ := strconv.ParseInt(lockingStartHeightStr, 10, 64)
-		if lockingStartHeight > 0 {
-			from = big.NewInt(lockingStartHeight)
-		}
-	}
-
-	to := headerNumber
-
-	// Prepare block range
-	if to.Cmp(from) == -1 {
-		from = to
-	}
-
-	// Handle events
-	rl.queryAndBroadcastEvents(rootchainContext, from, to)
-
-	// Set last block to storage
-	if err = rl.storageClient.Put([]byte(lastRootBlockKey), []byte(to.String()), nil); err != nil {
-		rl.Logger.Error("rl.storageClient.Put", "Error", err)
 	}
 }
 
+func (rl *RootChainListener) getLockingStartHeight() *big.Int {
+	lockingStartHeightStr := os.Getenv("LOCKING_START_HEIGHT")
+	if lockingStartHeightStr != "" {
+		lockingStartHeight, err := strconv.ParseInt(lockingStartHeightStr, 10, 64)
+		if err == nil && lockingStartHeight > 0 {
+			return big.NewInt(lockingStartHeight)
+		}
+	}
+	return big.NewInt(0)
+}
+
+func (rl *RootChainListener) getLastProcessedHeight() (*big.Int, error) {
+	hasLastBlock, err := rl.storageClient.Has([]byte(lastRootBlockKey), nil)
+	if err != nil {
+		rl.Logger.Error("Error while checking existence of last block in storage", "error", err)
+		return nil, err
+	}
+
+	if !hasLastBlock {
+		rl.Logger.Debug("No last block found in storage")
+		return big.NewInt(0), nil
+	}
+
+	lastBlockBytes, err := rl.storageClient.Get([]byte(lastRootBlockKey), nil)
+	if err != nil {
+		rl.Logger.Info("Error while fetching last block bytes from storage", "error", err)
+		return nil, err
+	}
+
+	rl.Logger.Debug("Got rootchain last block from storage", "lastBlock", string(lastBlockBytes))
+
+	lastBlockHeight, err := strconv.ParseUint(string(lastBlockBytes), 10, 64)
+	if err != nil {
+		rl.Logger.Info("Error while parsing last block height from storage", "error", err)
+		return nil, err
+	}
+
+	return big.NewInt(0).SetUint64(lastBlockHeight), nil
+}
+
 // queryAndBroadcastEvents fetches supported events from the rootchain and handles all of them
-func (rl *RootChainListener) queryAndBroadcastEvents(rootchainContext *RootChainListenerContext, fromBlock *big.Int, toBlock *big.Int) {
+func (rl *RootChainListener) queryAndBroadcastEvents(rootchainContext *RootChainListenerContext, fromBlock *big.Int, toBlock *big.Int) error {
 	// get chain params
 	chainParams := rootchainContext.ChainmanagerParams.ChainParams
 
@@ -184,23 +212,44 @@ func (rl *RootChainListener) queryAndBroadcastEvents(rootchainContext *RootChain
 	})
 	if err != nil {
 		rl.Logger.Error("Error while filtering logs", "error", err)
-		return
+		return err
 	} else if len(logs) > 0 {
 		rl.Logger.Info("New logs found", "numberOfLogs", len(logs))
+
+		if len(rl.abis) == 0 {
+			rl.Logger.Error("No ABI objects available")
+		}
 	}
 
 	// Process filtered log
-	for _, vLog := range logs {
+	for ix, vLog := range logs {
+		rl.Logger.Info("Starting to handle log", "logIndex", ix, "logBlock", vLog.BlockNumber, "logTx", vLog.TxHash, "topic", vLog.Topics[0])
 		topic := vLog.Topics[0].Bytes()
 		for _, abiObject := range rl.abis {
 			selectedEvent := helper.EventByID(abiObject, topic)
 			if selectedEvent == nil {
+				rl.Logger.Info("No matching event found", "topic", vLog.Topics[0])
 				continue
 			}
 
-			rl.handleLog(vLog, selectedEvent)
+			err = rl.handleLog(vLog, selectedEvent)
+			if err != nil {
+				// UNCHECK: Only log error, not sure what the impact of repeated transmission events would be
+				rl.Logger.Error("Error while handle log", "logBlock", vLog.BlockNumber, "logTx", vLog.TxHash, "error", err)
+
+				// try once more
+				err = rl.handleLog(vLog, selectedEvent)
+				if err != nil {
+					rl.Logger.Error("Error while handle log again", "logBlock", vLog.BlockNumber, "logTx", vLog.TxHash, "error", err)
+				} else {
+					rl.Logger.Info("Event saved while second handle log", "logBlock", vLog.BlockNumber, "logTx", vLog.TxHash, "eventName", selectedEvent.Name)
+				}
+			} else {
+				rl.Logger.Info("Event saved while first handle log", "logBlock", vLog.BlockNumber, "logTx", vLog.TxHash, "eventName", selectedEvent.Name)
+			}
 		}
 	}
+	return nil
 }
 
 // getRootChainContext returns the root chain context

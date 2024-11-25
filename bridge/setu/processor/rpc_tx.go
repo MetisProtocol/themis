@@ -168,7 +168,7 @@ func (rp *RpcTxProcessor) broadcastToThemis(logBytes string) error {
 		return err
 	}
 	rp.Logger.Info(
-		"Received task to send rpcTx to themis",
+		"✅ Received task to send rpcTx to themis",
 		"txHash", tx.Hash().Hex(),
 	)
 
@@ -271,7 +271,7 @@ func (rp *RpcTxProcessor) startSendTxToMetisPolling(ctx context.Context) {
 						return
 					}
 
-					rp.Logger.Info("Success broadcastToMetis tx to metis", "txHash", signedTx.Hash().Hex())
+					rp.Logger.Info("✅ Success broadcastToMetis tx to metis", "txHash", signedTx.Hash().Hex())
 				}
 			}(metisTx)
 		case <-ctx.Done():

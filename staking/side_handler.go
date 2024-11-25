@@ -79,7 +79,7 @@ func NewPostTxHandler(k Keeper, contractCaller helper.IContractCaller) hmTypes.P
 
 // SideHandleMsgValidatorJoin side msg validator join
 func SideHandleMsgValidatorJoin(ctx sdk.Context, msg types.MsgValidatorJoin, k Keeper, contractCaller helper.IContractCaller) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for validator join msg",
+	k.Logger(ctx).Info("✅ Validating External call for validator join msg",
 		"txHash", hmTypes.BytesToThemisHash(msg.TxHash.Bytes()),
 		"logIndex", msg.LogIndex,
 		"blockNumber", msg.BlockNumber,
@@ -158,7 +158,7 @@ func SideHandleMsgValidatorJoin(ctx sdk.Context, msg types.MsgValidatorJoin, k K
 		return hmCommon.ErrorSideTx(k.Codespace(), common.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for validator join msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for validator join msg")
 
 	result.Result = abci.SideTxResultType_Yes
 
@@ -167,7 +167,7 @@ func SideHandleMsgValidatorJoin(ctx sdk.Context, msg types.MsgValidatorJoin, k K
 
 // SideHandleMsgStakeUpdate handles stake update message
 func SideHandleMsgStakeUpdate(ctx sdk.Context, msg types.MsgStakeUpdate, k Keeper, contractCaller helper.IContractCaller) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for stake update msg",
+	k.Logger(ctx).Info("✅ Validating External call for stake update msg",
 		"txHash", hmTypes.BytesToThemisHash(msg.TxHash.Bytes()),
 		"logIndex", msg.LogIndex,
 		"blockNumber", msg.BlockNumber,
@@ -211,7 +211,7 @@ func SideHandleMsgStakeUpdate(ctx sdk.Context, msg types.MsgStakeUpdate, k Keepe
 		return hmCommon.ErrorSideTx(k.Codespace(), common.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for stake update msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for stake update msg")
 
 	result.Result = abci.SideTxResultType_Yes
 
@@ -220,7 +220,7 @@ func SideHandleMsgStakeUpdate(ctx sdk.Context, msg types.MsgStakeUpdate, k Keepe
 
 // SideHandleMsgSignerUpdate handles signer update message
 func SideHandleMsgSignerUpdate(ctx sdk.Context, msg types.MsgSignerUpdate, k Keeper, contractCaller helper.IContractCaller) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for signer update msg",
+	k.Logger(ctx).Info("✅ Validating External call for signer update msg",
 		"txHash", hmTypes.BytesToThemisHash(msg.TxHash.Bytes()),
 		"logIndex", msg.LogIndex,
 		"blockNumber", msg.BlockNumber,
@@ -272,7 +272,7 @@ func SideHandleMsgSignerUpdate(ctx sdk.Context, msg types.MsgSignerUpdate, k Kee
 		return hmCommon.ErrorSideTx(k.Codespace(), common.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for signer update msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for signer update msg")
 
 	result.Result = abci.SideTxResultType_Yes
 
@@ -281,7 +281,7 @@ func SideHandleMsgSignerUpdate(ctx sdk.Context, msg types.MsgSignerUpdate, k Kee
 
 // SideHandleMsgValidatorExit  handle  side msg validator exit
 func SideHandleMsgValidatorExit(ctx sdk.Context, msg types.MsgValidatorExit, k Keeper, contractCaller helper.IContractCaller) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for validator exit msg",
+	k.Logger(ctx).Info("✅ Validating External call for validator exit msg",
 		"txHash", hmTypes.BytesToThemisHash(msg.TxHash.Bytes()),
 		"logIndex", msg.LogIndex,
 		"blockNumber", msg.BlockNumber,
@@ -325,7 +325,7 @@ func SideHandleMsgValidatorExit(ctx sdk.Context, msg types.MsgValidatorExit, k K
 		return hmCommon.ErrorSideTx(k.Codespace(), common.CodeInvalidMsg)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for validator exit msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for validator exit msg")
 
 	result.Result = abci.SideTxResultType_Yes
 
@@ -334,7 +334,7 @@ func SideHandleMsgValidatorExit(ctx sdk.Context, msg types.MsgValidatorExit, k K
 
 // SideHandleMsgBatchSubmitReward  handle  side msg batch submit reward
 func SideHandleMsgBatchSubmitReward(ctx sdk.Context, msg types.MsgBatchSubmitReward, k Keeper, contractCaller helper.IContractCaller) (result abci.ResponseDeliverSideTx) {
-	k.Logger(ctx).Info("Validating External call for batch submit reward msg",
+	k.Logger(ctx).Info("✅ Validating External call for batch submit reward msg",
 		"txHash", hmTypes.BytesToThemisHash(msg.TxHash.Bytes()),
 		"logIndex", msg.LogIndex,
 		"blockNumber", msg.BlockNumber,
@@ -386,7 +386,7 @@ func SideHandleMsgBatchSubmitReward(ctx sdk.Context, msg types.MsgBatchSubmitRew
 		return hmCommon.ErrorSideTx(k.Codespace(), common.CodeInvalidBatchID)
 	}
 
-	k.Logger(ctx).Info("Successfully validated External call for batch submit reward msg")
+	k.Logger(ctx).Info("✅ Successfully validated External call for batch submit reward msg")
 
 	result.Result = abci.SideTxResultType_Yes
 
@@ -460,7 +460,7 @@ func PostHandleMsgValidatorJoin(ctx sdk.Context, k Keeper, msg types.MsgValidato
 
 	// save staking sequence
 	k.SetStakingSequence(ctx, sequence.String())
-	k.Logger(ctx).Info("New validator successfully joined", "validator", strconv.FormatUint(newValidator.ID.Uint64(), 10))
+	k.Logger(ctx).Info("✅ New validator successfully joined", "validator", strconv.FormatUint(newValidator.ID.Uint64(), 10))
 
 	// TX bytes
 	txBytes := ctx.TxBytes()

@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -78,25 +79,32 @@ func CheckBatchRewardTxLogic(ctx sdk.Context, k Keeper, txData []byte, txMsg []b
 		return err
 	}
 
-	k.Logger(ctx).Info("CheckBatchRewardTxLogic", "batchId", batchRewardInput.BatchId,
+	address := k.cm.GetChainParams(ctx).ChainParams.ValidatorSetAddress.EthAddress()
+	seqset, err := k.contractCaller.GetSequencerSetInstance(address)
+	if err != nil {
+		return err
+	}
+
+	k.Logger(ctx).Info("CheckBatchRewardTxLogic", "seqset", address, "batchId", batchRewardInput.BatchId,
 		"txData", hex.EncodeToString(txData), "txMsg", hex.EncodeToString(txMsg))
 
 	// Statistics span information in db
 	sequencerCount := make(map[ethCommon.Address]uint64)
 
 	for spanId := batchRewardInput.StartEpoch.Uint64(); spanId <= batchRewardInput.EndEpoch.Uint64(); spanId++ {
-		span, err := k.cm.GetSpanById(ctx, spanId)
+		info, err := seqset.Epochs(&bind.CallOpts{Context: ctx.Context()}, new(big.Int).SetUint64(spanId))
 		if err != nil {
-			k.Logger(ctx).Error("invalid spanId", "spanId", spanId, "error", err)
+			k.Logger(ctx).Error("unable to get the epoch", "spanId", spanId, "error", err)
 			return err
 		}
 
-		sequencer := span.SelectedProducers[0].Signer.EthAddress()
-		if sequencer == common.HexToAddress("0x0000000000000000000000000000000000000000") {
-			continue // skip zero address
+		if info.Signer == (ethCommon.Address{}) || info.StartBlock.BitLen() == 0 || info.EndBlock.BitLen() == 0 {
+			k.Logger(ctx).Error("invalid spanId, span not exits", "spanId", spanId)
+			return fmt.Errorf("span not found")
 		}
-		finishedBlock := span.EndBlock - span.StartBlock + 1
-		sequencerCount[sequencer] += finishedBlock
+
+		finishedBlock := info.EndBlock.Uint64() - info.StartBlock.Uint64() + 1
+		sequencerCount[info.Signer] += finishedBlock
 	}
 
 	if len(sequencerCount) != len(batchRewardInput.Seqs) {
