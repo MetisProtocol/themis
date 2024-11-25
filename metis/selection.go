@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/metis-seq/themis/helper"
@@ -53,9 +52,7 @@ func convertToSlots(vals []hmTypes.Validator) (validatorIndices []uint64) {
 //
 
 // SelectNextProducers selects producers for next span by converting power to tickets
-func SelectNextProducers(ctx sdk.Context, blkHash common.Hash, spanEligibleValidators []hmTypes.Validator, producerCount uint64) ([]uint64, error) {
-	randGen := NewCLTGenerator()
-
+func SelectNextProducers(blkHash common.Hash, spanEligibleValidators []hmTypes.Validator, producerCount uint64) ([]uint64, error) {
 	selectedProducers := make([]uint64, 0)
 
 	if len(spanEligibleValidators) <= int(producerCount) {
@@ -86,24 +83,7 @@ func SelectNextProducers(ctx sdk.Context, blkHash common.Hash, spanEligibleValid
 			Weighted range will look like (1, 2)
 			Rolling inclusive will have a range of 0 - 2, making validator with staking power 1 chance of selection = 66%
 		*/
-
-		var targetWeight uint64
-		if helper.GetNewSelectionAlgoHeight() == 0 || ctx.BlockHeight() < helper.GetNewSelectionAlgoHeight() {
-			targetWeight = randomRangeInclusive(1, totalVotingPower)
-			ctx.Logger().Debug("Selecting new proposer", "algoVersion", 0, "totalVotingPower",
-				totalVotingPower, "targetWeight", targetWeight,
-				"v1ElectionUpgradeHeight", helper.GetNewSelectionAlgoHeight())
-		} else {
-			targetWeightI64, err := randGen.GenerateRandomInt(seed, 1, totalVotingPower)
-			if err != nil {
-				return nil, err
-			}
-			targetWeight = uint64(targetWeightI64)
-			ctx.Logger().Debug("Selecting new proposer", "algoVersion", 1, "totalVotingPower",
-				totalVotingPower, "targetWeight", targetWeight,
-				"v1ElectionUpgradeHeight", helper.GetNewSelectionAlgoHeight())
-		}
-
+		targetWeight := randomRangeInclusive(1, totalVotingPower)
 		index := binarySearch(weightedRanges, targetWeight)
 		selectedProducers = append(selectedProducers, spanEligibleValidators[index].ID.Uint64())
 	}

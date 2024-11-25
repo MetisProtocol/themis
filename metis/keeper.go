@@ -558,7 +558,7 @@ func (k *Keeper) SelectNextProducers(ctx sdk.Context, seed common.Hash, unEligib
 	// select next producers using seed as blockheader hash
 	fn := SelectNextProducers
 
-	newProducersIds, err := fn(ctx, seed, finalSpanEligibleVals, producerCount)
+	newProducersIds, err := fn(seed, finalSpanEligibleVals, producerCount)
 	if err != nil {
 		return vals, err
 	}
