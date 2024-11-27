@@ -34,7 +34,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // HandleMsgProposeSpan handles proposeSpan msg
 func HandleMsgProposeSpan(ctx sdk.Context, msg types.MsgProposeSpan, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating proposed span msg",
+	k.Logger(ctx).Info("✅ Validating proposed span msg",
 		"spanId", msg.ID,
 		"currentL2Height", msg.CurrentL2Height,
 		"startBlock", msg.StartBlock,
@@ -180,7 +180,7 @@ func HandleMsgProposeSpan(ctx sdk.Context, msg types.MsgProposeSpan, k Keeper) s
 
 // HandleMsgReProposeSpan handles proposeSpan msg
 func HandleMsgReProposeSpan(ctx sdk.Context, msg types.MsgReProposeSpan, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating proposed re-span msg",
+	k.Logger(ctx).Info("✅ Validating proposed re-span msg",
 		"spanId", msg.ID,
 		"startBlock", msg.StartBlock,
 		"endBlock", msg.EndBlock,
@@ -357,7 +357,7 @@ func HandleMsgReProposeSpan(ctx sdk.Context, msg types.MsgReProposeSpan, k Keepe
 
 // HandleMsgMetisTx handles delReSpan msg
 func HandleMsgMetisTx(ctx sdk.Context, msg types.MsgMetisTx, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating metis tx msg",
+	k.Logger(ctx).Info("✅ Validating metis tx msg",
 		"txHash", msg.TxHash,
 		"logIndex", msg.LogIndex,
 	)

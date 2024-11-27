@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -89,6 +90,9 @@ type ContractCaller struct {
 	ContractInstanceCache map[common.Address]interface{}
 }
 
+// use global variable due to the ContractCaller is not a point
+var contractInstanceMutx sync.Mutex
+
 type txExtraInfo struct {
 	BlockNumber *string         `json:"blockNumber,omitempty"`
 	BlockHash   *common.Hash    `json:"blockHash,omitempty"`
@@ -128,10 +132,16 @@ func NewContractCaller() (contractCallerObj ContractCaller, err error) {
 func (c *ContractCaller) GetStakingInfoInstance(stakingInfoAddress common.Address) (*stakinginfo.Stakinginfo, error) {
 	contractInstance, ok := c.ContractInstanceCache[stakingInfoAddress]
 	if !ok {
-		ci, err := stakinginfo.NewStakinginfo(stakingInfoAddress, mainChainClient)
-		c.ContractInstanceCache[stakingInfoAddress] = ci
+		contractInstanceMutx.Lock()
+		defer contractInstanceMutx.Unlock()
 
-		return ci, err
+		ci, err := stakinginfo.NewStakinginfo(stakingInfoAddress, c.MainChainClient)
+		if err != nil {
+			return nil, err
+		}
+
+		c.ContractInstanceCache[stakingInfoAddress] = ci
+		return ci, nil
 	}
 
 	return contractInstance.(*stakinginfo.Stakinginfo), nil
@@ -141,10 +151,16 @@ func (c *ContractCaller) GetStakingInfoInstance(stakingInfoAddress common.Addres
 func (c *ContractCaller) GetSequencerSetInstance(sequencerSetAddress common.Address) (*sequencerset.Sequencerset, error) {
 	contractInstance, ok := c.ContractInstanceCache[sequencerSetAddress]
 	if !ok {
-		ci, err := sequencerset.NewSequencerset(sequencerSetAddress, metisClient)
+		contractInstanceMutx.Lock()
+		defer contractInstanceMutx.Unlock()
+
+		ci, err := sequencerset.NewSequencerset(sequencerSetAddress, c.MetisChainClient)
+		if err != nil {
+			return nil, err
+		}
 		c.ContractInstanceCache[sequencerSetAddress] = ci
 
-		return ci, err
+		return ci, nil
 	}
 
 	return contractInstance.(*sequencerset.Sequencerset), nil
@@ -154,10 +170,15 @@ func (c *ContractCaller) GetSequencerSetInstance(sequencerSetAddress common.Addr
 func (c *ContractCaller) GetStakeManagerInstance(stakingManagerAddress common.Address) (*stakemanager.Stakemanager, error) {
 	contractInstance, ok := c.ContractInstanceCache[stakingManagerAddress]
 	if !ok {
-		ci, err := stakemanager.NewStakemanager(stakingManagerAddress, mainChainClient)
-		c.ContractInstanceCache[stakingManagerAddress] = ci
+		contractInstanceMutx.Lock()
+		defer contractInstanceMutx.Unlock()
 
-		return ci, err
+		ci, err := stakemanager.NewStakemanager(stakingManagerAddress, c.MainChainClient)
+		if err != nil {
+			return nil, err
+		}
+		c.ContractInstanceCache[stakingManagerAddress] = ci
+		return ci, nil
 	}
 
 	return contractInstance.(*stakemanager.Stakemanager), nil
@@ -167,10 +188,17 @@ func (c *ContractCaller) GetStakeManagerInstance(stakingManagerAddress common.Ad
 func (c *ContractCaller) GetMetisTokenInstance(metisTokenAddress common.Address) (*erc20.Erc20, error) {
 	contractInstance, ok := c.ContractInstanceCache[metisTokenAddress]
 	if !ok {
-		ci, err := erc20.NewErc20(metisTokenAddress, mainChainClient)
+		contractInstanceMutx.Lock()
+		defer contractInstanceMutx.Unlock()
+
+		ci, err := erc20.NewErc20(metisTokenAddress, c.MainChainClient)
+		if err != nil {
+			return nil, err
+		}
+
 		c.ContractInstanceCache[metisTokenAddress] = ci
 
-		return ci, err
+		return ci, nil
 	}
 
 	return contractInstance.(*erc20.Erc20), nil

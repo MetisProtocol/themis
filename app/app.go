@@ -539,7 +539,7 @@ func (app *ThemisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci
 	setUpdates := helper.GetUpdatedValidators(
 		&currentValidatorSet, // pointer to current validator set -- UpdateValidators will modify it
 		allValidators,        // All validators
-		ackCount,             // ack count, L1 batch
+		ackCount,             // ack count， L1 batch
 	)
 
 	if len(setUpdates) > 0 {

@@ -152,7 +152,7 @@ func (sp *StakingProcessor) sendValidatorJoinToThemis(eventName string, logBytes
 		}
 
 		sp.Logger.Info(
-			"Received task to send validatorjoin to themis",
+			"✅ Received task to send validatorjoin to themis",
 			"event", eventName,
 			"validatorID", event.SequencerId,
 			"activationBatch", event.ActivationBatch,
@@ -215,7 +215,7 @@ func (sp *StakingProcessor) sendUnstakeInitToThemis(eventName string, logBytes s
 		}
 
 		sp.Logger.Info(
-			"Received task to send unstake-init to themis",
+			"✅ Received task to send unstake-init to themis",
 			"event", eventName,
 			"validator", event.User,
 			"validatorID", event.SequencerId,
@@ -273,7 +273,7 @@ func (sp *StakingProcessor) sendStakeUpdateToThemis(eventName string, logBytes s
 		}
 
 		sp.Logger.Info(
-			"Received task to send stake-update to themis",
+			"✅ Received task to send stake-update to themis",
 			"event", eventName,
 			"validatorID", event.SequencerId,
 			"nonce", event.Nonce,
@@ -336,7 +336,7 @@ func (sp *StakingProcessor) sendSignerChangeToThemis(eventName string, logBytes 
 		}
 
 		sp.Logger.Info(
-			"Received task to send signer-change to themis",
+			"✅ Received task to send signer-change to themis",
 			"event", eventName,
 			"validatorID", event.SequencerId,
 			"nonce", event.Nonce,
@@ -401,7 +401,7 @@ func (sp *StakingProcessor) sendBatchSubmitRewardToThemis(eventName string, logB
 		}
 
 		sp.Logger.Info(
-			"Received task to send batch-submit-reward to themis",
+			"✅ Received task to send batch-submit-reward to themis",
 			"event", eventName,
 			"txHash", hmTypes.BytesToThemisHash(vLog.TxHash.Bytes()),
 			"logIndex", uint64(vLog.Index),

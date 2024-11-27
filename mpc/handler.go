@@ -28,7 +28,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // HandleMsgProposeMpcCreate handles proposeSpan msg
 func HandleMsgProposeMpcCreate(ctx sdk.Context, msg types.MsgProposeMpcCreate, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating proposed mpc create msg",
+	k.Logger(ctx).Info("✅ Validating proposed mpc create msg",
 		"id", msg.ID,
 	)
 
@@ -64,7 +64,7 @@ func HandleMsgProposeMpcCreate(ctx sdk.Context, msg types.MsgProposeMpcCreate, k
 
 // HandleMsgProposeMpcSign handles mpc msg
 func HandleMsgProposeMpcSign(ctx sdk.Context, msg types.MsgProposeMpcSign, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating proposed mpc sign msg",
+	k.Logger(ctx).Info("✅ Validating proposed mpc sign msg",
 		"id", msg.ID,
 	)
 
@@ -91,7 +91,7 @@ func HandleMsgProposeMpcSign(ctx sdk.Context, msg types.MsgProposeMpcSign, k Kee
 
 // HandleMsgMpcSign handles mpc msg
 func HandleMsgMpcSign(ctx sdk.Context, msg types.MsgMpcSign, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("Validating proposed mpc sign msg",
+	k.Logger(ctx).Info("✅ Validating proposed mpc sign msg",
 		"id", msg.ID,
 	)
 

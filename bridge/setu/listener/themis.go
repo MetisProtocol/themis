@@ -224,7 +224,7 @@ func (hl *ThemisListener) saveToMetisTxEvent(eventBytes string) error {
 	}
 
 	hl.Logger.Info(
-		"Received broadcastToMetis task to send rpcTx to metis",
+		"✅ Received broadcastToMetis task to send rpcTx to metis",
 		"txHash", txHash,
 		"txData", txData,
 	)

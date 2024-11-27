@@ -190,7 +190,7 @@ func (sp *SpanProcessor) propose(lastSpan *types.Span, nextSpanMsg *types.Span) 
 		defer sp.lock.Unlock()
 
 		// log new span
-		sp.Logger.Info("Proposing new span", "spanId", nextSpanMsg.ID, "startBlock", nextSpanMsg.StartBlock, "endBlock", nextSpanMsg.EndBlock)
+		sp.Logger.Info("✅ Proposing new span", "spanId", nextSpanMsg.ID, "startBlock", nextSpanMsg.StartBlock, "endBlock", nextSpanMsg.EndBlock)
 
 		seed, err := sp.fetchNextSpanSeed()
 		if err != nil {
@@ -221,7 +221,7 @@ func (sp *SpanProcessor) propose(lastSpan *types.Span, nextSpanMsg *types.Span) 
 
 func (sp *SpanProcessor) proposeRecoverSpan(newSpan *epochInfo, chainID string) {
 	// log new span
-	sp.Logger.Info("Proposing recover new span", "spanId", newSpan.ID, "startBlock", newSpan.StartBlock, "endBlock", newSpan.EndBlock)
+	sp.Logger.Info("✅ Proposing recover new span", "spanId", newSpan.ID, "startBlock", newSpan.StartBlock, "endBlock", newSpan.EndBlock)
 
 	seed, err := sp.fetchNextSpanSeed()
 	if err != nil {
@@ -516,7 +516,7 @@ func (sp *SpanProcessor) checkReSpan(delayTime time.Duration) {
 				defer sp.lock.Unlock()
 
 				sp.Logger.Debug("metis block does not grow after delay", "dbBlockHeight", dbBlockHeight, "chainBlockHeight", chainBlockHeight)
-				sp.Logger.Info("Proposing new re-span", "dbBlockHeight", dbBlockHeight, "chainBlockHeight", chainBlockHeight)
+				sp.Logger.Info("✅ Proposing new re-span", "dbBlockHeight", dbBlockHeight, "chainBlockHeight", chainBlockHeight)
 
 				// generate new sequencer
 				currentBatch, err := util.GetCurrentBatch(sp.cliCtx)

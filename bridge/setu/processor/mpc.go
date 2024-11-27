@@ -167,7 +167,7 @@ func (mp *MpcProcessor) propose(lastSpan *types.Span, mpcSet *types.MpcSet, mpcT
 	} else {
 		// mpc id generate
 		mpcID = uuid.New().String()
-		mp.Logger.Info("Proposing new mpc create", "mpcId", mpcID)
+		mp.Logger.Info("✅ Proposing new mpc create", "mpcId", mpcID)
 
 		if len(mpcSet.Result) < 3 {
 			threshold = uint64(len(mpcSet.Result) - 1)
@@ -210,7 +210,7 @@ func (mp *MpcProcessor) propose(lastSpan *types.Span, mpcSet *types.MpcSet, mpcT
 	mp.Logger.Info("MpcCreate success", "mpcAddress", mpcAddress.String())
 
 	// log new mpc
-	mp.Logger.Info("Proposing new mpc to themis", "mpcId", mpcID)
+	mp.Logger.Info("✅ Proposing new mpc to themis", "mpcId", mpcID)
 
 	// broadcast new mpc info to themis
 	msg := mpcTypes.MsgProposeMpcCreate{
@@ -373,7 +373,7 @@ func (mp *MpcProcessor) mpcKeySign(eventBytes string) error {
 	selectedMpcProposer := mp.selectMpcProposer(signID)
 	if strings.EqualFold(selectedMpcProposer, helper.GetAddressStr()) {
 		mp.Logger.Info(
-			"Proposing new mpc sign",
+			"✅ Proposing new mpc sign",
 			"event", event.Type,
 			"signID", signID,
 			"mpcID", mpcID,

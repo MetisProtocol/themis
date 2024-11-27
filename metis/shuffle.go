@@ -24,7 +24,7 @@ var (
 	}}
 )
 
-// ShuffleList returns list of shuffled indexes in a pseudorandom permutation `p` of `0...list_size - 1` with "seed" as entropy.
+// ShuffleList returns list of shuffled indexes in a pseudorandom permutation `p` of `0...list_size - 1` with “seed“ as entropy.
 // We utilize 'swap or not' shuffling in this implementation; we are allocating the memory with the seed that stays
 // constant between iterations instead of reallocating it each iteration as in the spec. This implementation is based
 // on the original implementation from protolambda, https://github.com/protolambda/eth2-shuffle
