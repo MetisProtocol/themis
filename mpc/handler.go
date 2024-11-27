@@ -40,7 +40,7 @@ func HandleMsgProposeMpcCreate(ctx sdk.Context, msg types.MsgProposeMpcCreate, k
 
 	// check mpc type
 	switch msg.MpcType {
-	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType:
+	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType, hmTypes.BlobSubmitMpcType:
 	default:
 		k.Logger(ctx).Info("invalid mpc type, ignore it")
 		return common.ErrMpcInvalidType(k.Codespace()).Result()

@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmTypes "github.com/tendermint/tendermint/types"
+
 	hmCommon "github.com/metis-seq/themis/common"
 	"github.com/metis-seq/themis/helper"
 	"github.com/metis-seq/themis/mpc/types"
 	hmTypes "github.com/metis-seq/themis/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmTypes "github.com/tendermint/tendermint/types"
 )
 
 // NewSideTxHandler returns a side handler for "mpc" type messages.
@@ -76,7 +76,7 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 
 	// check mpc type
 	switch msg.MpcType {
-	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType:
+	case hmTypes.CommonMpcType, hmTypes.StateSubmitMpcType, hmTypes.RewardSubmitMpcType, hmTypes.BlobSubmitMpcType:
 	default:
 		k.Logger(ctx).Info("invalid mpc type, ignore it")
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeMpcInvalidType)
@@ -455,8 +455,7 @@ func PostHandleMsgMpcSign(ctx sdk.Context, k Keeper, msg types.MsgMpcSign, sideT
 	}
 	k.Logger(ctx).Debug("before build tx signer with chainID", "id", msg.ID, "signerChainID", txSigner.ChainID())
 
-	tx := new(ethTypes.Transaction)
-	err = tx.UnmarshalBinary(sign.SignData)
+	tx, err := types.DecodeUnsignedTx(sign.SignData)
 	if err != nil {
 		k.Logger(ctx).Error("PostHandleMsgMpcSign tx unmarlshal failed", "id", msg.ID, "err", err)
 		return hmCommon.ErrInvalidMsg(k.Codespace(), err.Error()).Result()

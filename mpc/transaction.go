@@ -13,12 +13,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+
+	mpcTypes "github.com/metis-seq/themis/mpc/types"
 	hmTypes "github.com/metis-seq/themis/types"
 )
 
 func GetCheckTxSignMsgData(ctx sdk.Context, k Keeper, msgType hmTypes.SignType, signData []byte) (types.Signer, []byte, []byte, error) {
-	tx := new(types.Transaction)
-	err := tx.UnmarshalBinary(signData)
+	tx, err := mpcTypes.DecodeUnsignedTx(signData)
 	if err != nil {
 		k.Logger(ctx).Error("CheckTxSignMsg tx unmarlshal failed", "err", err)
 		return nil, nil, nil, err
@@ -38,7 +39,7 @@ func GetCheckTxSignMsgData(ctx sdk.Context, k Keeper, msgType hmTypes.SignType, 
 	}
 
 	k.Logger(ctx).Info("GetCheckTxSignMsgData chain_id", "chain_id", chainID)
-	txSigner := types.NewLondonSigner(big.NewInt(int64(chainID)))
+	txSigner := types.NewCancunSigner(big.NewInt(int64(chainID)))
 	return txSigner, txSigner.Hash(tx).Bytes(), tx.Data(), nil
 }
 

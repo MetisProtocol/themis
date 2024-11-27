@@ -70,6 +70,7 @@ const (
 var MpcCommonGenerated bool
 var MpcStateCommitGenerated bool
 var MpcRewardCommitGenerated bool
+var MpcBlobCommitGenerated bool
 var RecoverSpanFinished bool
 var MetisTxChan chan *sqlite.MetisTx
 var MetisTxLock sync.Mutex

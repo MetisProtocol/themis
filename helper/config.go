@@ -105,7 +105,7 @@ const (
 	DefaultSHStakeUpdateInterval    = 3 * time.Hour
 	DefaultSHMaxDepthDuration       = time.Hour
 
-	DefaultMainchainGasLimit = uint64(5000000)
+	DefaultMainchainGasLimit  = uint64(5000000)
 	DefaultMetischainGasLimit = uint64(5000000)
 
 	MainchainBuildGasLimit  = uint64(30_000_000)
@@ -120,6 +120,9 @@ const (
 
 	DefaultLogsType = "json"
 	DefaultChain    = MainChain
+
+	DefaultMetricsListenAddr = ":2112"
+	DefaultRPCListenAddr     = ":8646"
 
 	DefaultTendermintNode = "tcp://localhost:26657"
 
@@ -996,9 +999,8 @@ func NotifyRespanStart(preSequencer, newSequencer string, startHeight uint64) er
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		Logger.Error("NotifyRespanStart http request failed", "err", err)
-
+		return err
 	}
 	defer res.Body.Close()
 

@@ -20,6 +20,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/metis-seq/themis/bridge/setu/rpc"
 	"github.com/metis-seq/themis/bridge/setu/util"
 	"github.com/metis-seq/themis/helper"
@@ -83,6 +84,10 @@ func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration
 			if !util.MpcRewardCommitGenerated {
 				mp.checkAndPropose(types.RewardSubmitMpcType)
 			}
+
+			if !util.MpcBlobCommitGenerated {
+				mp.checkAndPropose(types.BlobSubmitMpcType)
+			}
 		case <-ctx.Done():
 			mp.Logger.Info("Polling stopped")
 			ticker.Stop()
@@ -135,6 +140,8 @@ func (mp *MpcProcessor) checkAndPropose(mpcType types.MpcType) {
 			util.MpcStateCommitGenerated = true
 		} else if mpcType == types.RewardSubmitMpcType {
 			util.MpcRewardCommitGenerated = true
+		} else if mpcType == types.BlobSubmitMpcType {
+			util.MpcBlobCommitGenerated = true
 		}
 		mp.Logger.Info("checkAndPropose mpc found", "mpcId", lastMpc.ID, "mpcAddress", lastMpc.MpcAddress, "checkMpcType", mpcType, "lastMpcType", lastMpc.MpcType)
 	}
@@ -157,6 +164,8 @@ func (mp *MpcProcessor) propose(lastSpan *types.Span, mpcSet *types.MpcSet, mpcT
 			mpcID = os.Getenv("MPC_STATE_RECOVER_ID")
 		case types.RewardSubmitMpcType:
 			mpcID = os.Getenv("MPC_REWARD_RECOVER_ID")
+		case types.BlobSubmitMpcType:
+			mpcID = os.Getenv("MPC_BLOB_RECOVER_ID")
 		}
 
 		mpcPub, threshold, err = helper.GetMpcKey(mpcID)
@@ -245,7 +254,7 @@ func (mp *MpcProcessor) getLastMpc(mpcType types.MpcType) (*types.Mpc, error) {
 	// fetch latest start block from themis via rest query
 	result, err := helper.FetchFromAPI(mp.cliCtx, helper.GetThemisServerEndpoint(fmt.Sprintf(util.LatestMpcURL, mpcType)))
 	if err != nil {
-		mp.Logger.Error("Error while fetching latest mpc")
+		mp.Logger.Error("Error while fetching latest mpc", "err", err)
 		return nil, err
 	}
 
