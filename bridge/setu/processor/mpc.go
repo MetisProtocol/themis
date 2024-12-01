@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -50,8 +51,9 @@ func (mp *MpcProcessor) Start() error {
 	mp.cancelMpcService = cancelMpcService
 
 	// start polling for mpc-create
-	mp.Logger.Info("Start polling for mpc", "pollInterval", helper.GetConfig().MpcPollInterval)
-	go mp.startPolling(mpcCtx, helper.GetConfig().MpcPollInterval)
+	config := helper.GetConfig()
+	mp.Logger.Info("Start polling for mpc", "pollInterval", config.MpcPollInterval, "blobUpgradeHeight", config.BlobUpgradeHeight)
+	go mp.startPolling(mpcCtx, config.MpcPollInterval, config.BlobUpgradeHeight)
 
 	return nil
 }
@@ -61,7 +63,7 @@ func (mp *MpcProcessor) RegisterTasks() {
 }
 
 // startPolling - polls themis and checks if new mpc needs to be proposed
-func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration) {
+func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration, blobUpgradeHeight uint64) {
 	ticker := time.NewTicker(interval)
 	dbTicker := time.NewTicker(10 * time.Millisecond)
 	// stop ticker when everything done
@@ -86,6 +88,27 @@ func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration
 			}
 
 			if !util.MpcBlobCommitGenerated {
+				if blobUpgradeHeight == 0 {
+					mp.Logger.Info("Blob upgrade height not set, ignore blob commitment mpc creation")
+					continue
+				}
+
+				// start creating blob mpc account only when we reached the blob upgrade height
+				lastBlockBytes, err := mp.storageClient.Get([]byte(lastMetisBlockKey), nil)
+				if err != nil {
+					mp.Logger.Error("Unable to fetch last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
+					continue
+				}
+				dbBlockHeight, err := strconv.ParseUint(string(lastBlockBytes), 10, 64)
+				if err != nil {
+					mp.Logger.Error("Unable to parse last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
+					continue
+				}
+				if dbBlockHeight < blobUpgradeHeight {
+					mp.Logger.Info("Blob upgrade height not reached, ignore blob commitment mpc creation", "dbBlockHeight", dbBlockHeight, "blobUpgradeHeight", blobUpgradeHeight)
+					continue
+				}
+
 				mp.checkAndPropose(types.BlobSubmitMpcType)
 			}
 		case <-ctx.Done():
