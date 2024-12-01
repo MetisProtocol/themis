@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,6 +125,8 @@ const (
 	DefaultMetricsListenAddr = ":2112"
 	DefaultRPCListenAddr     = ":8646"
 
+	DefaultBlobUpgradeHeight = 0
+
 	DefaultTendermintNode = "tcp://localhost:26657"
 
 	DefaultMainnetSeeds = ""
@@ -190,6 +193,8 @@ type Configuration struct {
 
 	// current chain - newSelectionAlgoHeight depends on this
 	Chain string `mapstructure:"chain"`
+
+	BlobUpgradeHeight uint64 `mapstructure:"blob_upgrade_height"` // height for blob upgrade, default to 0 (disable by default, enable by setting something larger than 0)
 }
 
 var conf Configuration
@@ -391,9 +396,10 @@ func GetDefaultThemisConfig() Configuration {
 		SHStakeUpdateInterval: DefaultSHStakeUpdateInterval,
 		SHMaxDepthDuration:    DefaultSHMaxDepthDuration,
 
-		LogsType:       DefaultLogsType,
-		Chain:          DefaultChain,
-		LogsWriterFile: "", // default to stdout
+		LogsType:          DefaultLogsType,
+		Chain:             DefaultChain,
+		LogsWriterFile:    "", // default to stdout
+		BlobUpgradeHeight: DefaultBlobUpgradeHeight,
 	}
 
 	// env over write
@@ -461,6 +467,15 @@ func (c *Configuration) MergeFromEnv() {
 		c.MpcPollInterval, err = time.ParseDuration(envMpcPollInterval)
 		if err != nil {
 			panic("invalid MPC_POLL_INTERNAL" + err.Error())
+		}
+	}
+
+	envBlobUpgradeHeight := os.Getenv("BLOB_UPGRADE_HEIGHT")
+	if envBlobUpgradeHeight != "" {
+		var err error
+		c.BlobUpgradeHeight, err = strconv.ParseUint(envBlobUpgradeHeight, 10, 64)
+		if err != nil {
+			panic("invalid BLOB_UPGRADE_HEIGHT" + err.Error())
 		}
 	}
 }
