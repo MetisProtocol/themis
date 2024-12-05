@@ -41,6 +41,8 @@ type SpanProcessor struct {
 
 	caller helper.ContractCaller
 	lock   sync.Mutex
+
+	recoverOnce sync.Once
 }
 
 // Start starts new block subscription
@@ -61,7 +63,49 @@ func (sp *SpanProcessor) Start() error {
 	sp.Logger.Info("Start checking for re-span", "pollInterval", helper.GetConfig().ReSpanPollInterval, "delayTime", helper.GetConfig().ReSpanDelayTime)
 	go sp.startCheckRespan(spanCtx, helper.GetConfig().ReSpanPollInterval, helper.GetConfig().ReSpanDelayTime)
 
+	go sp.startRecoverPrevSpanTimer()
+
 	return nil
+}
+
+func (sp *SpanProcessor) startRecoverPrevSpanTimer() {
+	time.AfterFunc(5*time.Minute, func() {
+		sp.recoverOnce.Do(func() {
+			sp.recoverPrevSpan()
+		})
+	})
+}
+
+func (sp *SpanProcessor) recoverPrevSpan() {
+	sp.Logger.Info("Span recover prev span check")
+	lastSpan, err := sp.getLastSpan()
+	if err != nil {
+		sp.Logger.Error("Unable to fetch last span", "error", err)
+		return
+	}
+
+	if lastSpan == nil {
+		sp.Logger.Error("Last span is nil")
+		return
+	}
+	// get span info from L2
+	l2EpochNumber, _, l2EpochEnd, err := getChildLatestEpoch(sp.contractConnector, sp.cliCtx)
+	if err != nil {
+		sp.Logger.Error("Unable to fetch l2 span", "error", err)
+		return
+	}
+	if l2EpochNumber+1 == int64(lastSpan.ID) && uint64(l2EpochEnd+1) < lastSpan.StartBlock && lastSpan.SelectedProducers[0].Signer.EthAddress() == common.HexToAddress(helper.GetAddressStr()) {
+		// l2 epoch large than pos span,recover span list from L2
+		prevSpan, err := getChildEpochInfo(sp.contractConnector, sp.cliCtx, l2EpochNumber)
+		if err != nil {
+			sp.Logger.Error("Unable to getChildEpochInfo for prev span", "l2EpochNumber", l2EpochNumber, "error", err)
+			return
+		}
+		sp.proposeRecoverSpan(prevSpan, lastSpan.ChainID)
+		sp.Logger.Info("Propose recover prev span", "l2EpochNumber", l2EpochNumber, "l2EpochEnd", l2EpochEnd, "lastSpan.ID", lastSpan.ID, "lastSpan.StartBlock", lastSpan.StartBlock)
+	} else {
+		sp.Logger.Info("Not propose recover prev span", "l2EpochNumber", l2EpochNumber, "l2EpochEnd", l2EpochEnd, "lastSpan.ID", lastSpan.ID, "lastSpan.StartBlock", lastSpan.StartBlock)
+	}
 }
 
 // RegisterTasks - nil
