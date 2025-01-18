@@ -64,8 +64,8 @@ func HandleMsgProposeMpcCreate(ctx sdk.Context, msg types.MsgProposeMpcCreate, k
 
 // HandleMsgProposeMpcSign handles mpc msg
 func HandleMsgProposeMpcSign(ctx sdk.Context, msg types.MsgProposeMpcSign, k Keeper) sdk.Result {
-	k.Logger(ctx).Info("✅ Validating proposed mpc sign msg",
-		"id", msg.ID,
+	k.Logger(ctx).Info("✅ Validating proposing mpc sign msg",
+		"id", msg.ID, "signType", msg.SignType,
 	)
 
 	// check if mpc sign id exist.
