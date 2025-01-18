@@ -45,7 +45,7 @@ func handleQueryMpc(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]by
 
 	// return error if mpc doesn't exist
 	if mpc == nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("mpc %v does not exist", params.MpcID))
+		return nil, nil
 	}
 
 	// json record
