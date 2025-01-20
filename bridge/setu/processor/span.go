@@ -552,17 +552,22 @@ func (sp *SpanProcessor) checkReSpan(delayTime time.Duration) {
 				}
 
 				// increase 100 block every respan
-				reSpanIncrease := 100
+				reSpanIncrease := uint64(100)
 
 				// get epoch length getSequencerEpochLength
 				epochLength, err := getSequencerEpochLength(sp.contractConnector, sp.cliCtx)
-				if err != nil {
-					sp.Logger.Error("Error while getSequencerEpochLength", "error", err)
+				if err != nil || epochLength < 1 {
+					sp.Logger.Error("Error getSequencerEpochLength", "error", err, "epoch", epochLength)
 					return
 				}
-				endBlock := newSpan.EndBlock + uint64(reSpanIncrease)
+				endBlock := newSpan.EndBlock + reSpanIncrease
 				if endBlock-chainBlockHeight < uint64(epochLength) {
 					endBlock += uint64(epochLength)
+				}
+
+				startBlock := chainBlockHeight + 1
+				if endBlock <= startBlock {
+					endBlock = startBlock + uint64(epochLength) + reSpanIncrease
 				}
 
 				// broadcast reselect span msg to themis
@@ -573,12 +578,12 @@ func (sp *SpanProcessor) checkReSpan(delayTime time.Duration) {
 					NextProducer:    types.HexToThemisAddress(newSequencer),
 					CurrentL2Height: chainBlockHeight,
 					CurrentL2Epoch:  uint64(currentL2Epoch),
-					StartBlock:      chainBlockHeight + 1,
+					StartBlock:      startBlock,
 					EndBlock:        endBlock,
 					ChainID:         newSpan.ChainID,
 					Seed:            seed,
 				}
-				sp.Logger.Info("new span", "msg", msg)
+				sp.Logger.Info("new re-span", "msg", msg)
 
 				if sp.isValidator() {
 					// return broadcast to themis
