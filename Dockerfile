@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.22.12 AS builder
+FROM golang:1.23.9 AS builder
 RUN apt update && apt install -y build-essential git
 WORKDIR /app
 COPY . .
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build make install
 
-FROM debian:12-slim
+FROM debian:stable-slim
 COPY --from=builder /go/bin/* /usr/local/bin/
 RUN apt-get update && \
     apt-get install -yqq --no-install-recommends sqlite3 curl jq ca-certificates && \
