@@ -82,12 +82,23 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeMpcInvalidType)
 	}
 
+	for _, item := range k.GetAllMpcs(ctx) {
+		if item.MpcType == msg.MpcType {
+			k.Logger(ctx).Info("the mpc address has been created", "type", item.MpcType)
+			return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeMpcInvalidType)
+		}
+	}
+
+	curNode, isMpcNode := strings.ToLower(helper.GetAddressStr()), false
 	// get mpc set info
 	mpcSetInfo := make(map[hmTypes.ThemisAddress]struct{})
 	mpcSet := k.GetAllMpcSets(ctx)
 	for _, set := range mpcSet {
 		signer := hmTypes.HexToThemisAddress(set.Moniker)
 		mpcSetInfo[signer] = struct{}{}
+		if set.Moniker == curNode {
+			isMpcNode = true
+		}
 	}
 
 	// check parties
@@ -116,15 +127,19 @@ func SideHandleMsgMpcCreate(ctx sdk.Context, k Keeper, msg types.MsgProposeMpcCr
 		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
 	}
 
-	// check mpc info from mpc server
-	mpcPubKey, _, err := helper.GetMpcKey(msg.ID)
-	if err != nil {
-		k.Logger(ctx).Error("GetMpcKey err", "err", err)
-		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
-	}
-	if !bytes.Equal(mpcPubKey, pubKey.SerializeCompressed()) {
-		k.Logger(ctx).Error("MpcCreate check err: pubkey mismatch", "mpcPubKey", hex.EncodeToString(mpcPubKey), "msgPubKey", pubKey, hex.EncodeToString(pubKey.SerializeCompressed()))
-		return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
+	if isMpcNode {
+		// check mpc info from mpc server
+		mpcPubKey, _, err := helper.GetMpcKey(msg.ID)
+		if err != nil {
+			k.Logger(ctx).Error("GetMpcKey err", "err", err)
+			return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
+		}
+		if !bytes.Equal(mpcPubKey, pubKey.SerializeCompressed()) {
+			k.Logger(ctx).Error("MpcCreate check err: pubkey mismatch", "mpcPubKey", hex.EncodeToString(mpcPubKey), "msgPubKey", pubKey, hex.EncodeToString(pubKey.SerializeCompressed()))
+			return hmCommon.ErrorSideTx(k.Codespace(), hmCommon.CodeInvalidMsg)
+		}
+	} else {
+		k.Logger(ctx).Info("not a mpc node, skip to verify", "node", curNode)
 	}
 
 	k.Logger(ctx).Info("✅ Successfully validated External call for mpc create msg")
