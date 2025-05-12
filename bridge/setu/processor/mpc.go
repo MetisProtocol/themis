@@ -140,11 +140,10 @@ func (mp *MpcProcessor) checkAndPropose(mpcType types.MpcType) {
 		mp.Logger.Info("checkAndPropose mpc not found")
 
 		if mp.isMpcProposer() {
-			lastSpan, _ := mp.getLastSpan()
-
-			// Make sure that each span will only generate mpc once
-			hasLocalMpcCreate, _ := mp.storageClient.Has([]byte(localMpcCreateKey+fmt.Sprintf("%v_%v", lastSpan.ID, mpcType)), nil)
-			if !hasLocalMpcCreate {
+			// Make sure that each 300s only generate mpc once
+			lastReqTimeRaw, _ := mp.storageClient.Get([]byte(localMpcCreateKey+fmt.Sprintf("%v", mpcType)), nil)
+			lastReqTime, _ := strconv.ParseInt(string(lastReqTimeRaw), 10, 64)
+			if time.Now().UTC().Unix()-lastReqTime > 300 {
 				mp.Logger.Info("checkAndPropose mpc not found, and local mpc create not exist")
 
 				// get current mpc set
@@ -153,7 +152,7 @@ func (mp *MpcProcessor) checkAndPropose(mpcType types.MpcType) {
 					mp.Logger.Error("Unable to fetch mpcSet", "error", err)
 					return
 				}
-				mp.propose(lastSpan, mpcSet, mpcType)
+				mp.propose(mpcSet, mpcType)
 			}
 		}
 	} else {
@@ -171,7 +170,7 @@ func (mp *MpcProcessor) checkAndPropose(mpcType types.MpcType) {
 }
 
 // propose new mpc if needed
-func (mp *MpcProcessor) propose(lastSpan *types.Span, mpcSet *types.MpcSet, mpcType types.MpcType) {
+func (mp *MpcProcessor) propose(mpcSet *types.MpcSet, mpcType types.MpcType) {
 	var mpcID string
 	var mpcPub []byte
 	var err error
@@ -262,14 +261,14 @@ func (mp *MpcProcessor) propose(lastSpan *types.Span, mpcSet *types.MpcSet, mpcT
 	}
 
 	// set local key
-	mp.setLocalMpcCreate(lastSpan.ID, mpcID, mpcType)
+	mp.setLocalMpcCreate(mpcID, mpcType)
 }
 
-func (mp *MpcProcessor) setLocalMpcCreate(spanID uint64, mpcID string, mpcType types.MpcType) {
-	if err := mp.storageClient.Put([]byte(localMpcCreateKey+fmt.Sprintf("%v_%v", spanID, mpcType)), []byte(mpcID), nil); err != nil {
+func (mp *MpcProcessor) setLocalMpcCreate(mpcID string, mpcType types.MpcType) {
+	if err := mp.storageClient.Put([]byte(localMpcCreateKey+fmt.Sprintf("%v", mpcType)), []byte(strconv.FormatInt(time.Now().UTC().Unix(), 10)), nil); err != nil {
 		mp.Logger.Error("rl.storageClient.Put", "Error", err)
 	}
-	mp.Logger.Info("setLocalMpcCreate", "spanID", spanID, "mpcId", mpcID)
+	mp.Logger.Info("setLocalMpcCreate", "mpcId", mpcID)
 }
 
 // checks mpc status
