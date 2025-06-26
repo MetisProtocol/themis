@@ -63,7 +63,7 @@ func (mp *MpcProcessor) RegisterTasks() {
 }
 
 // startPolling - polls themis and checks if new mpc needs to be proposed
-func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration, blobUpgradeHeight uint64) {
+func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration, blobUpgradeHeight int64) {
 	ticker := time.NewTicker(interval)
 	dbTicker := time.NewTicker(10 * time.Millisecond)
 	// stop ticker when everything done
@@ -88,25 +88,26 @@ func (mp *MpcProcessor) startPolling(ctx context.Context, interval time.Duration
 			}
 
 			if !util.MpcBlobCommitGenerated {
-				if blobUpgradeHeight == 0 {
-					mp.Logger.Info("Blob upgrade height not set, ignore blob commitment mpc creation")
+				if blobUpgradeHeight < 0 {
 					continue
 				}
 
-				// start creating blob mpc account only when we reached the blob upgrade height
-				lastBlockBytes, err := mp.storageClient.Get([]byte(lastMetisBlockKey), nil)
-				if err != nil {
-					mp.Logger.Error("Unable to fetch last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
-					continue
-				}
-				dbBlockHeight, err := strconv.ParseUint(string(lastBlockBytes), 10, 64)
-				if err != nil {
-					mp.Logger.Error("Unable to parse last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
-					continue
-				}
-				if dbBlockHeight < blobUpgradeHeight {
-					mp.Logger.Info("Blob upgrade height not reached, ignore blob commitment mpc creation", "dbBlockHeight", dbBlockHeight, "blobUpgradeHeight", blobUpgradeHeight)
-					continue
+				if blobUpgradeHeight > 0 {
+					// start creating blob mpc account only when we reached the blob upgrade height
+					lastBlockBytes, err := mp.storageClient.Get([]byte(lastMetisBlockKey), nil)
+					if err != nil {
+						mp.Logger.Error("Unable to fetch last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
+						continue
+					}
+					dbBlockHeight, err := strconv.ParseInt(string(lastBlockBytes), 10, 64)
+					if err != nil {
+						mp.Logger.Error("Unable to parse last block height from local db, probably not synced, ignore blob commitment mpc creation", "error", err)
+						continue
+					}
+					if dbBlockHeight < blobUpgradeHeight {
+						mp.Logger.Info("Blob upgrade height not reached, ignore blob commitment mpc creation", "dbBlockHeight", dbBlockHeight, "blobUpgradeHeight", blobUpgradeHeight)
+						continue
+					}
 				}
 
 				mp.checkAndPropose(types.BlobSubmitMpcType)
@@ -156,13 +157,14 @@ func (mp *MpcProcessor) checkAndPropose(mpcType types.MpcType) {
 			}
 		}
 	} else {
-		if mpcType == types.CommonMpcType {
+		switch mpcType {
+		case types.CommonMpcType:
 			util.MpcCommonGenerated = true
-		} else if mpcType == types.StateSubmitMpcType {
+		case types.StateSubmitMpcType:
 			util.MpcStateCommitGenerated = true
-		} else if mpcType == types.RewardSubmitMpcType {
+		case types.RewardSubmitMpcType:
 			util.MpcRewardCommitGenerated = true
-		} else if mpcType == types.BlobSubmitMpcType {
+		case types.BlobSubmitMpcType:
 			util.MpcBlobCommitGenerated = true
 		}
 		mp.Logger.Info("checkAndPropose mpc found", "mpcId", lastMpc.ID, "mpcAddress", lastMpc.MpcAddress, "checkMpcType", mpcType, "lastMpcType", lastMpc.MpcType)
@@ -322,6 +324,9 @@ func (mp *MpcProcessor) getLastSpan() (*types.Span, error) {
 
 // isMpcProposer checks if current user is mpc proposer
 func (mp *MpcProcessor) isMpcProposer() bool {
+	if yes := os.Getenv("IS_MPC_PROPOSER"); yes != "true" && yes != "1" {
+		return false
+	}
 	// get current mpc set
 	mpcSet, err := mp.getMpcSet()
 	if err != nil {

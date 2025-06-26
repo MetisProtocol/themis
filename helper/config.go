@@ -125,7 +125,7 @@ const (
 	DefaultMetricsListenAddr = ":2112"
 	DefaultRPCListenAddr     = ":8646"
 
-	DefaultBlobUpgradeHeight = 0
+	DefaultBlobUpgradeHeight = -1
 
 	DefaultTendermintNode = "tcp://localhost:26657"
 
@@ -194,7 +194,7 @@ type Configuration struct {
 	// current chain - newSelectionAlgoHeight depends on this
 	Chain string `mapstructure:"chain"`
 
-	BlobUpgradeHeight uint64 `mapstructure:"blob_upgrade_height"` // height for blob upgrade, default to 0 (disable by default, enable by setting something larger than 0)
+	BlobUpgradeHeight int64 `mapstructure:"blob_upgrade_height"` // height for blob upgrade, default to -1 (disable by default, enable by setting something larger than -1)
 }
 
 var conf Configuration
@@ -473,7 +473,7 @@ func (c *Configuration) MergeFromEnv() {
 	envBlobUpgradeHeight := os.Getenv("BLOB_UPGRADE_HEIGHT")
 	if envBlobUpgradeHeight != "" {
 		var err error
-		c.BlobUpgradeHeight, err = strconv.ParseUint(envBlobUpgradeHeight, 10, 64)
+		c.BlobUpgradeHeight, err = strconv.ParseInt(envBlobUpgradeHeight, 10, 64)
 		if err != nil {
 			panic("invalid BLOB_UPGRADE_HEIGHT" + err.Error())
 		}
